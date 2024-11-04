@@ -1,30 +1,53 @@
 package com.app.inventory.services;
 
+import java.util.Collections;
+import java.util.List;
+
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.app.inventory.models.InventoryModel;
-import com.app.inventory.models.ItemModel;
 import com.app.inventory.repositories.InventoryRepository;
 
 @Service
+@Transactional
 public class InventoryService {
+
     @Autowired
     private InventoryRepository inventoryRepository;
 
-    @Autowired
-    private ItemService itemService;
+    public InventoryModel save(InventoryModel item) {
+        return inventoryRepository.save(item);
+    }
 
-    // public InventoryModel addInventory(InventoryModel inventory) {
-    // ItemModel item = inventory.getItem();
-    // if (inventory.getType().equals("T")) {
-    // item.setStock(inventory.getQuantity() + item.getStock());
-    // } else if (inventory.getType().equals("W")) {
-    // item.setStock(item.getStock() - inventory.getQuantity());
+    public InventoryModel findByItemId(String itemId) {
+        return inventoryRepository.findByItemId(itemId).orElse(null);
+    }
+
+    public InventoryModel softDelete(InventoryModel item) {
+        item.setIsDeleted(true);
+        return inventoryRepository.save(item);
+    }
+
+    public void deleteById(String itemId) {
+        inventoryRepository.deleteById(itemId);
+    }
+
+    public Page<InventoryModel> findAllItemByPage(Pageable pageable) {
+        return inventoryRepository.findAllItemsPage(pageable);
+    }
+
+    public List<InventoryModel> findAllActiveItems() {
+        List<InventoryModel> activeItems = inventoryRepository.findAllActiveItems();
+        return activeItems.isEmpty() ? Collections.emptyList() : activeItems;
+    }
+
+    // public Page<InventoryModel> searchItemsByName(String name, Pageable pageable)
+    // {
+    // return inventoryRepository.searchByName(name, pageable);
     // }
-    // itemService.updateItemStock(item.getId(), item.getStock());
-
-    // return inventoryRepository.save(inventory);
-    // }
-
 }
