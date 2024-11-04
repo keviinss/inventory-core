@@ -4,9 +4,13 @@ NOTE :
 - if inventory added with type T (Top Up) then stock items will increase and vice versa if type W (Withdrawal) then stock items will decreased. 
 - if item ordered it will also reduce/deduct the stock of the item. 
 
-Spring Boot Application that provides the following API endpoints:		
-1	ITEM	
-	when listing / get item should have option to display remaining stock of each item	
+Spring Boot Application that provides the following API endpoints:
+
+ITEM
+when listing / get item should have option to display remaining stock of each item
+
+		
+		
 	- Get
 	- Listing with pagination
 	- Save
