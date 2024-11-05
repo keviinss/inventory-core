@@ -97,7 +97,7 @@ public class InventoryController {
         return ResponseEntity.status(status).body(response);
     }
 
-    @PutMapping("/inventory/update")
+    @PutMapping("/inventory")
     public ResponseEntity<Object> updateInventory(@Valid @RequestBody InventoryPayload payload, Errors errors) {
         ResponseJson<Object> response = new ResponseJson<>();
         HttpStatus status = HttpStatus.BAD_REQUEST;
