@@ -24,4 +24,7 @@ public interface InventoryRepository extends JpaRepository<InventoryModel, Strin
     @Query("SELECT u FROM InventoryModel u WHERE u.isDeleted = false AND u.itemId = :itemId")
     Optional<InventoryModel> findByItemId(@Param("itemId") String itemId);
 
+    @Query("SELECT u FROM InventoryModel u WHERE u.isDeleted = false AND u.inventoryId = :inventoryId")
+    Optional<InventoryModel> findByInventoryId(@Param("inventoryId") String inventoryId);
+
 }

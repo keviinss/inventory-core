@@ -28,6 +28,10 @@ public class InventoryService {
         return inventoryRepository.findByItemId(itemId).orElse(null);
     }
 
+    public InventoryModel findByInventoryId(String inventoryId) {
+        return inventoryRepository.findByInventoryId(inventoryId).orElse(null);
+    }
+
     public InventoryModel softDelete(InventoryModel item) {
         item.setIsDeleted(true);
         return inventoryRepository.save(item);
