@@ -10,7 +10,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Positive;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
@@ -30,50 +29,43 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 @Table(name = "order", schema = "inventory")
-
 public class OrderModel implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "pg-uuid")
     @GenericGenerator(name = "pg-uuid", strategy = "uuid2")
-    @Column(name = "id_order", length = 50)
-    private String id_order;
+    @Column(name = "order_id", length = 50, updatable = false, nullable = false)
+    private String orderId;
 
-    @NotBlank(message = "Type is mandatory")
-    @Column(name = "item_id", nullable = false)
-    private String item_id;
+    @NotBlank(message = "Item ID is mandatory")
+    @Column(name = "item_id", nullable = false, length = 50)
+    private String itemId;
 
-    @Positive(message = "Quantity must be positive")
-    @Column(name = "quantity", length = 50)
+    @Column(name = "quantity", nullable = false)
     private int quantity;
 
-    private int price;
-
     @JsonIgnore
-    @Column(name = "is_deleted")
-    private Boolean is_deleted = false;
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean isDeleted = false;
 
-    @Column(name = "created_at", updatable = false)
     @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+07")
-    private Date created_at;
+    private Date createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+07")
-    private Date updated_at;
+    private Date updatedAt;
 
-    public OrderModel(
-            String id_order, @NotBlank(message = "Type is mandatory") String item_id,
-            @Positive(message = "Quantity must be positive") int quantity, int price, Boolean is_deleted,
-            Date created_at, Date updated_at) {
-        this.id_order = id_order;
-        this.item_id = item_id;
+    public OrderModel(String orderId, @NotBlank(message = "Item ID is mandatory") String itemId, int quantity,
+            Boolean isDeleted, Date createdAt, Date updatedAt) {
+        this.orderId = orderId;
+        this.itemId = itemId;
         this.quantity = quantity;
-        this.price = price;
-        this.is_deleted = is_deleted;
-        this.created_at = created_at;
-        this.updated_at = updated_at;
+        this.isDeleted = isDeleted;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
 }
