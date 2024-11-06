@@ -50,8 +50,4 @@ public class InventoryService {
         return activeItems.isEmpty() ? Collections.emptyList() : activeItems;
     }
 
-    // public Page<InventoryModel> searchItemsByName(String name, Pageable pageable)
-    // {
-    // return inventoryRepository.searchByName(name, pageable);
-    // }
 }
