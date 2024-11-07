@@ -2,7 +2,6 @@ package com.app.inventory.request;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Positive;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -27,7 +26,6 @@ public class InventoryItemPayload {
     @NotBlank(message = "ItemId is mandatory")
     private String itemId;
 
-    @Positive(message = "Quantity must be positive")
     private int quantity;
 
     @NotBlank(message = "Type is mandatory")

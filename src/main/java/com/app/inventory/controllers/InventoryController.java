@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -57,43 +58,49 @@ public class InventoryController {
 
         List<InventoryModel> savedItems = new ArrayList<>();
 
-        // Process each item in the payload
-        for (InventoryItemPayload itemPayload : payload.getItems()) {
-            ItemModel item = itemService.findByItemId(itemPayload.getItemId());
+        try {
+            // Process each item in the payload
+            for (InventoryItemPayload itemPayload : payload.getItems()) {
+                ItemModel item = itemService.findByItemId(itemPayload.getItemId());
 
-            if (item == null) {
-                response.setMessages("Item not found for ID: " + itemPayload.getItemId());
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-            }
+                if (item == null) {
+                    response.setMessages("Item not found for ID: " + itemPayload.getItemId());
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
 
-            // Create new inventory record
-            InventoryModel inventory = new InventoryModel();
-            inventory.setItemId(itemPayload.getItemId());
-            inventory.setQuantity(itemPayload.getQuantity());
-            inventory.setType(itemPayload.getType());
+                // Create new inventory record
+                InventoryModel inventory = new InventoryModel();
+                inventory.setItemId(itemPayload.getItemId());
+                inventory.setQuantity(itemPayload.getQuantity());
+                inventory.setType(itemPayload.getType());
 
-            // Update stock based on transaction type
-            switch (itemPayload.getType()) {
-                case "T" -> // Top-up: increase stock
-                    item.setStock(item.getStock() + itemPayload.getQuantity());
-                case "W" -> {
-                    // Withdrawal: decrease stock
-                    if (item.getStock() >= itemPayload.getQuantity()) {
-                        item.setStock(item.getStock() - itemPayload.getQuantity());
-                    } else {
-                        response.setMessages("Insufficient stock for item ID: " + itemPayload.getItemId());
+                // Update stock based on transaction type
+                switch (itemPayload.getType()) {
+                    case "T" -> // Top-up: increase stock
+                        item.setStock(item.getStock() + itemPayload.getQuantity());
+                    case "W" -> {
+                        // Withdrawal: decrease stock
+                        if (item.getStock() >= itemPayload.getQuantity()) {
+                            item.setStock(item.getStock() - itemPayload.getQuantity());
+                        } else {
+                            response.setMessages("Insufficient stock for item ID: " + itemPayload.getItemId());
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                        }
+                    }
+                    default -> {
+                        response.setMessages("Invalid operation type for item ID: " + itemPayload.getItemId());
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                     }
                 }
-                default -> {
-                    response.setMessages("Invalid operation type for item ID: " + itemPayload.getItemId());
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-                }
-            }
 
-            // Save updated item stock and new inventory record
-            itemService.save(item);
-            savedItems.add(inventoryService.save(inventory));
+                // Save updated item stock and new inventory record
+                itemService.save(item);
+                savedItems.add(inventoryService.save(inventory));
+            }
+        } catch (DataIntegrityViolationException e) {
+            // Handle constraint violation, such as quantity > 0 check
+            response.setMessages("Failed to create inventory: Quantity must be greater than zero");
+            return ResponseEntity.status(status).body(response);
         }
 
         // Set successful response data
@@ -121,49 +128,55 @@ public class InventoryController {
 
         List<InventoryModel> updatedItems = new ArrayList<>();
 
-        // Process each item in the payload
-        for (InventoryItemPayload itemPayload : payload.getItems()) {
-            // Check if the inventory record exists for the given inventoryId
-            InventoryModel inventory = inventoryService.findByInventoryId(itemPayload.getInventoryId());
+        try {
+            // Process each item in the payload
+            for (InventoryItemPayload itemPayload : payload.getItems()) {
+                // Check if the inventory record exists for the given inventoryId
+                InventoryModel inventory = inventoryService.findByInventoryId(itemPayload.getInventoryId());
 
-            if (inventory == null) {
-                response.setMessages("Inventory record not found for ID: " + itemPayload.getInventoryId());
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-            }
+                if (inventory == null) {
+                    response.setMessages("Inventory record not found for ID: " + itemPayload.getInventoryId());
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
 
-            // Check if item exists in the item table
-            ItemModel item = itemService.findByItemId(itemPayload.getItemId());
+                // Check if item exists in the item table
+                ItemModel item = itemService.findByItemId(itemPayload.getItemId());
 
-            if (item == null) {
-                response.setMessages("Item not found for item ID: " + itemPayload.getItemId());
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-            }
+                if (item == null) {
+                    response.setMessages("Item not found for item ID: " + itemPayload.getItemId());
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
 
-            // Update stock based on transaction type
-            switch (itemPayload.getType()) {
-                case "T" -> // Top-up: increase stock
-                    item.setStock(item.getStock() + itemPayload.getQuantity());
-                case "W" -> {
-                    // Withdrawal: decrease stock
-                    if (item.getStock() >= itemPayload.getQuantity()) {
-                        item.setStock(item.getStock() - itemPayload.getQuantity());
-                    } else {
-                        response.setMessages("Insufficient stock for item ID: " + itemPayload.getItemId());
+                // Update stock based on transaction type
+                switch (itemPayload.getType()) {
+                    case "T" -> // Top-up: increase stock
+                        item.setStock(item.getStock() + itemPayload.getQuantity());
+                    case "W" -> {
+                        // Withdrawal: decrease stock
+                        if (item.getStock() >= itemPayload.getQuantity()) {
+                            item.setStock(item.getStock() - itemPayload.getQuantity());
+                        } else {
+                            response.setMessages("Insufficient stock for item ID: " + itemPayload.getItemId());
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                        }
+                    }
+                    default -> {
+                        response.setMessages("Invalid operation type for item ID: " + itemPayload.getItemId());
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                     }
                 }
-                default -> {
-                    response.setMessages("Invalid operation type for item ID: " + itemPayload.getItemId());
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-                }
+
+                // Update the quantity in inventory
+                inventory.setQuantity(itemPayload.getQuantity());
+
+                // Save updated item stock and inventory record
+                itemService.save(item);
+                updatedItems.add(inventoryService.save(inventory));
             }
-
-            // Update the quantity in inventory
-            inventory.setQuantity(itemPayload.getQuantity());
-
-            // Save updated item stock and inventory record
-            itemService.save(item);
-            updatedItems.add(inventoryService.save(inventory));
+        } catch (DataIntegrityViolationException e) {
+            // Handle constraint violation, such as quantity > 0 check
+            response.setMessages("Failed to update inventory: Quantity must be greater than zero");
+            return ResponseEntity.status(status).body(response);
         }
 
         // Set successful response data
@@ -194,14 +207,14 @@ public class InventoryController {
 
         ResponseJson<Object> response = new ResponseJson<>();
 
-        // Check if the Item ID cannot be empty
+        // Check if the Inventory ID cannot be empty
         if (inventoryId == null || inventoryId.isEmpty()) {
             response.setStatus_code(HttpStatus.BAD_REQUEST.value());
             response.setMessages("Inventory ID is required");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
-        // Check if Item ID does not exist in the database
+        // Check if Inventory ID does not exist in the database
         InventoryModel data = inventoryService.findByInventoryId(inventoryId);
         if (data != null) {
             response.setStatus_code(HttpStatus.OK.value());
@@ -232,7 +245,7 @@ public class InventoryController {
     }
 
     @DeleteMapping("/inventory/soft-delete/{inventoryId}")
-    public ResponseEntity<Object> deleteItem(@PathVariable String inventoryId) {
+    public ResponseEntity<Object> softDeleteInventory(@PathVariable String inventoryId) {
         ResponseJson<Object> response = new ResponseJson<>();
 
         // Check if the Inventory ID cannot be empty

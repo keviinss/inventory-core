@@ -9,7 +9,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Positive;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
@@ -41,7 +40,6 @@ public class InventoryModel {
     @Column(name = "item_id", length = 50)
     private String itemId;
 
-    @Positive(message = "Quantity must be positive")
     @Column(name = "quantity", length = 50)
     private int quantity;
 
@@ -63,8 +61,7 @@ public class InventoryModel {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+07")
     private Date updatedAt;
 
-    public InventoryModel(String inventoryId, @NotBlank(message = "Type is mandatory") String itemId,
-            @Positive(message = "Quantity must be positive") int quantity,
+    public InventoryModel(String inventoryId, @NotBlank(message = "Type is mandatory") String itemId, int quantity,
             @NotBlank(message = "Type is mandatory") String type, Boolean isDeleted, Date createdAt, Date updatedAt) {
         this.inventoryId = inventoryId;
         this.itemId = itemId;
