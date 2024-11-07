@@ -42,7 +42,7 @@ public class ItemModel {
     @Column(name = "name", length = 50)
     private String name;
 
-    @Positive(message = "Price must be positive")
+    @NotNull(message = "Stock is mandatory")
     @Column(name = "price")
     private int price;
 

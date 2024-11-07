@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
@@ -48,19 +49,40 @@ public class ItemController {
             return ResponseEntity.badRequest().body(response);
         }
 
-        // Check if item exists by name
-        ItemModel existingItem = itemService.findByName(payload.getName());
-        if (existingItem != null) {
-            response.setMessages("Name already exists");
+        // Check if stock is positive
+        if (payload.getStock() <= 0) {
+            response.setMessages("Stock must be greater than zero");
             response.setStatus_code(HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
 
-        // Create and save a new item
+        // Additional validation for price
+        if (payload.getPrice() <= 0) {
+            response.setMessages("Price must be greater than zero");
+            response.setStatus_code(HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.badRequest().body(response);
+        }
+
         ItemModel newItem = new ItemModel();
-        newItem.setName(payload.getName());
-        newItem.setPrice(payload.getPrice());
-        newItem.setStock(payload.getStock());
+
+        try {
+            // Check if item exists by name
+            ItemModel existingItem = itemService.findByName(payload.getName());
+            if (existingItem != null) {
+                response.setMessages("Name already exists");
+                response.setStatus_code(HttpStatus.BAD_REQUEST.value());
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Create and save a new item
+            newItem.setName(payload.getName());
+            newItem.setPrice(payload.getPrice());
+            newItem.setStock(payload.getStock());
+
+        } catch (DataIntegrityViolationException e) {
+            response.setMessages("Failed to create item: Stock must be greater than zero");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
 
         // Set success status
         response.setData(itemService.save(newItem));
@@ -88,26 +110,47 @@ public class ItemController {
             return ResponseEntity.badRequest().body(response);
         }
 
-        // Retrieve item by ID
-        ItemModel item = itemService.findByItemId(itemId);
-        if (item == null) {
-            response.setMessages("Data does not exist");
-            response.setStatus_code(HttpStatus.NOT_FOUND.value());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-        }
-
-        // Check if the name already exists for a different item
-        ItemModel existingName = itemService.findByName(payload.getName());
-        if (existingName != null && !existingName.getItemId().equals(itemId)) {
-            response.setMessages("Name already exists");
+        // Check if stock is positive
+        if (payload.getStock() <= 0) {
+            response.setMessages("Stock must be greater than zero");
             response.setStatus_code(HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
 
-        // Update item fields and save
-        item.setName(payload.getName());
-        item.setPrice(payload.getPrice());
-        item.setStock(payload.getStock());
+        // Additional validation for price
+        if (payload.getPrice() <= 0) {
+            response.setMessages("Price must be greater than zero");
+            response.setStatus_code(HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        ItemModel item = itemService.findByItemId(itemId);
+
+        try {
+            // Retrieve item by ID
+            if (item == null) {
+                response.setMessages("Data does not exist");
+                response.setStatus_code(HttpStatus.NOT_FOUND.value());
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            // Check if the name already exists for a different item
+            ItemModel existingName = itemService.findByName(payload.getName());
+            if (existingName != null && !existingName.getItemId().equals(itemId)) {
+                response.setMessages("Name already exists");
+                response.setStatus_code(HttpStatus.BAD_REQUEST.value());
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Update item fields and save
+            item.setName(payload.getName());
+            item.setPrice(payload.getPrice());
+            item.setStock(payload.getStock());
+
+        } catch (DataIntegrityViolationException e) {
+            response.setMessages("Failed to create item: Stock must be greater than zero");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
 
         response.setData(itemService.save(item));
         response.setStatus_code(HttpStatus.OK.value());

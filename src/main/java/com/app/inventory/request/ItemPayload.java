@@ -1,8 +1,8 @@
 package com.app.inventory.request;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -27,7 +27,7 @@ public class ItemPayload {
     @NotBlank(message = "Name is mandatory")
     private String name;
 
-    @Positive(message = "Price must be positive")
+    @Min(value = 1, message = "Price must be greater than zero")
     private int price;
 
     @NotNull(message = "Stock is mandatory")
